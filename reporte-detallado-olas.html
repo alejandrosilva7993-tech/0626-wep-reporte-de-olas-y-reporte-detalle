@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Reporte detallado de olas — WEP</title>
+  <link href="https://unpkg.com/primeicons@7.0.0/primeicons.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3b82f6;
+      --text-color: #4b5563;
+      --text-color-secondary: #6b7280;
+      --text-heading: #1e293b;
+      --surface-border: #dee2e6;
+      --section-gap: 1rem;
+      --p-progressbar-background: #d1d5db;
+      --p-progressbar-border-radius: 6px;
+      --p-progressbar-height: 1.5rem;
+      --p-progressbar-value-background: var(--primary-color);
+      --p-progressbar-success: #22c55e;
+      --p-progressbar-danger: #ef4444;
+      --p-progressbar-secondary: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: var(--text-color);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .hidden { display: none !important; }
+    .view-hidden { display: none !important; }
+    .page-wrap { max-width: 1400px; margin: 0 auto; padding: 1.25rem; }
+    .page-wrap.is-loading { pointer-events: none; }
+    .breadcrumb { font-size: 0.8rem; color: var(--text-color-secondary); margin-bottom: 0.35rem; }
+    .breadcrumb a { color: var(--primary-color); text-decoration: none; cursor: pointer; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .page-header__main h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      margin-bottom: 0.25rem;
+    }
+    .page-header__main p { color: var(--text-color-secondary); font-size: 0.9rem; }
+    .page-header__meta { font-size: 0.75rem; color: var(--text-color-secondary); white-space: nowrap; }
+    .page-header__actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .page-header--detail {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.65rem;
+    }
+    .page-header--detail .table-toolbar {
+      margin-bottom: 0;
+    }
+    .page-header__title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+    .page-header__title-row h1 {
+      margin-bottom: 0;
+    }
+
+    .criteria-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.75rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 0.75rem 1rem;
+      margin-bottom: var(--section-gap);
+      overflow: visible;
+    }
+    .criteria-bar:has(.form-error.visible) {
+      padding-bottom: 2.75rem;
+    }
+    .criteria-bar.is-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      background: white;
+    }
+    .criteria-bar:has(.multiselect-panel.open) {
+      z-index: 250;
+    }
+    .criteria-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .criteria-field label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color);
+      white-space: nowrap;
+    }
+    .criteria-field--daterange { width: 260px; max-width: 260px; flex: 0 0 260px; }
+    .criteria-field--select { width: 260px; max-width: 260px; flex: 0 0 260px; overflow: visible; }
+    .criteria-field--text { width: 240px; max-width: 240px; flex: 0 0 240px; }
+    .criteria-field--actions { flex-shrink: 0; }
+    .criteria-field--actions::before {
+      content: '';
+      display: block;
+      height: 1.05rem;
+      margin-bottom: 0.25rem;
+    }
+    .criteria-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .criteria-bar .form-error {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      margin-top: 0.2rem;
+      font-size: 0.7rem;
+      color: #b91c1c;
+      line-height: 1.2;
+      display: none;
+    }
+    .criteria-bar .form-error.visible { display: block; }
+    .page-wrap .form-input {
+      width: 100%;
+      min-height: 2.25rem;
+      padding: 0.4rem 0.65rem;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-color);
+      background: white;
+      font-family: inherit;
+      line-height: 1.25;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .page-wrap .form-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+    }
+    .page-wrap .form-input.invalid { border-color: #b91c1c; }
+    .page-wrap .form-input[readonly] {
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .flatpickr-calendar { z-index: 200 !important; }
+
+    .multiselect { position: relative; width: 100%; max-width: 100%; }
+    .multiselect-trigger {
+      width: 100%;
+      min-height: 2.25rem;
+      height: auto;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: inherit;
+    }
+    .multiselect-trigger.invalid { border-color: #b91c1c; }
+    .multiselect-values {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+      overflow: visible;
+    }
+    .multiselect-placeholder {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .multiselect-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.15rem 0.4rem;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      line-height: 1.2;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .multiselect-chip button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: inherit;
+      padding: 0.15rem;
+      font-size: 0.7rem;
+      min-width: 1.25rem;
+      min-height: 1.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .multiselect-chip--more {
+      background: #f1f5f9;
+      color: var(--text-color-secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .multiselect-arrow {
+      flex-shrink: 0;
+      color: var(--text-color-secondary);
+      pointer-events: none;
+      font-size: 0.85rem;
+    }
+    .multiselect-panel {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 300;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+    }
+    .multiselect-panel.open { display: block; }
+    .multiselect-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.65rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .multiselect-option:hover { background: #f8fafc; }
+    .multiselect-option input { cursor: pointer; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      min-height: 2.25rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: 1px solid #cbd5e1;
+      background: white;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: inherit;
+      color: #495057;
+      font-weight: 400;
+    }
+    .btn:hover:not(:disabled) { background: #f1f5f9; }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .btn-primary {
+      font-weight: 600;
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    .btn-primary:hover:not(:disabled) { background: #2563eb; }
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .btn-text {
+      border: none;
+      background: transparent;
+      color: var(--primary-color);
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+    }
+    .btn-text:hover:not(:disabled) { background: #eff6ff; }
+
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: var(--section-gap);
+      overflow: visible;
+      position: relative;
+      z-index: 40;
+    }
+    .table-toolbar__left,
+    .table-toolbar__right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-icon-action {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 1rem;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-icon-action--export { background: var(--primary-color); }
+    .btn-icon-action--export:hover:not(:disabled) { background: #2563eb; }
+    .btn-icon-action:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* PrimeNG homolog: p-button (Lara Light Blue) */
+    .p-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.5;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      user-select: none;
+    }
+    .p-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .p-button-icon-only {
+      width: 2.25rem;
+      height: 2.25rem;
+      min-width: 2.25rem;
+      min-height: 2.25rem;
+      padding: 0;
+      gap: 0;
+    }
+    .p-button-rounded {
+      border-radius: 50%;
+    }
+    .p-button-icon-only.p-button-rounded {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+    .p-button .p-button-icon,
+    .p-button .pi {
+      font-size: 0.95rem;
+      line-height: 1;
+    }
+    .p-button-text {
+      background: transparent;
+      border-color: transparent;
+    }
+    .p-button-text.p-button-secondary {
+      color: #64748b;
+    }
+    .p-button-text.p-button-secondary .p-button-icon,
+    .p-button-text.p-button-secondary .pi,
+    .p-button-text.p-button-secondary .pi::before {
+      color: #64748b;
+    }
+    .p-button-text.p-button-secondary:not(:disabled):hover {
+      background: rgba(100, 116, 139, 0.08);
+      border-color: transparent;
+      color: #475569;
+    }
+    .p-button-text.p-button-secondary:not(:disabled):hover .p-button-icon,
+    .p-button-text.p-button-secondary:not(:disabled):hover .pi,
+    .p-button-text.p-button-secondary:not(:disabled):hover .pi::before {
+      color: #475569;
+    }
+    .p-button-text.p-button-secondary:not(:disabled):active {
+      background: rgba(100, 116, 139, 0.16);
+      border-color: transparent;
+      color: #334155;
+    }
+    .p-button-text.p-button-secondary:not(:disabled):active .p-button-icon,
+    .p-button-text.p-button-secondary:not(:disabled):active .pi,
+    .p-button-text.p-button-secondary:not(:disabled):active .pi::before {
+      color: #334155;
+    }
+    .p-button-text.p-button-secondary:focus-visible {
+      outline: 2px solid #64748b;
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+    .page-header__title-row .p-button-icon-only {
+      flex-shrink: 0;
+    }
+    .float-tooltip {
+      position: fixed;
+      z-index: 10000;
+      padding: 0.4rem 0.6rem;
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 0.75rem;
+      line-height: 1.3;
+      border-radius: 6px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      pointer-events: none;
+    }
+    .float-tooltip[hidden] { display: none !important; }
+    .btn-clear-filters {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      min-height: 2.25rem;
+      border: none;
+      border-radius: 6px;
+      background: #64748b;
+      color: #fff;
+      font-size: 0.875rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-clear-filters .pi { font-size: 0.9rem; }
+    .btn-clear-filters:hover:not(:disabled) { background: #475569; }
+    .btn-clear-filters:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .table-action-btn .pi { font-size: 0.9rem; }
+
+    .warning-panel {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 1rem 1.25rem;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      margin-bottom: var(--section-gap);
+    }
+    .warning-panel .pi { color: #d97706; font-size: 1.25rem; margin-top: 0.1rem; }
+    .warning-title { font-weight: 600; color: #92400e; margin-bottom: 0.25rem; }
+    .warning-body { color: #78350f; font-size: 0.9rem; }
+
+    #listResults {
+      overflow: visible;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 1rem;
+    }
+    #listTableCard,
+    #taskTableCard {
+      padding: 0;
+      overflow: hidden;
+    }
+    .data-table-scroll-pane {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .data-table {
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .data-table--scroll {
+      table-layout: fixed;
+      width: 100%;
+      min-width: 1200px;
+    }
+    .data-table th,
+    .data-table td {
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+      box-sizing: border-box;
+    }
+    .data-table thead th {
+      overflow: visible;
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: normal;
+      line-height: 1.3;
+    }
+    .data-table td {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: var(--text-color);
+      background: inherit;
+    }
+    .data-table td.col-actions {
+      overflow: visible;
+    }
+    colgroup col.col-actions { width: 96px; }
+    .data-table th.col-actions,
+    .data-table td.col-actions,
+    .data-table thead tr.filter-row th.filter-cell.col-actions {
+      width: 96px;
+      min-width: 96px;
+      max-width: 96px;
+    }
+    .data-table th.col-progress,
+    .data-table td.col-progress {
+      overflow: visible;
+      white-space: normal;
+      min-width: 190px;
+      width: 190px;
+    }
+    .data-table td.col-progress .progress-cell__value {
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .data-table thead tr.header-row {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .data-table thead tr.header-row th {
+      background: #f8fafc;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #334155;
+      letter-spacing: 0.01em;
+      vertical-align: middle;
+    }
+    .data-table thead tr.header-row th.sortable {
+      cursor: pointer;
+    }
+    .data-table thead tr.header-row th.sortable:hover {
+      background: #f1f5f9;
+    }
+    .data-table thead tr.filter-row {
+      background: #f8fafc;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .data-table thead tr.filter-row th.filter-cell {
+      background: #f8fafc;
+      padding: 4px 8px 8px;
+      font-weight: 400;
+      vertical-align: middle;
+    }
+    .col-header-content {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      max-width: 100%;
+    }
+    .col-header-text {
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: normal;
+      line-height: 1.3;
+    }
+    .sort-icon {
+      font-size: 0.8rem;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .table-filter-field {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .table-filter-input {
+      flex: 1;
+      height: 30px;
+      min-width: 0;
+      width: 100%;
+      padding: 0 8px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      color: var(--text-color);
+      background: #fff;
+      outline: none;
+    }
+    .table-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #64748b;
+      cursor: default;
+      font-size: 0.7rem;
+      padding: 0;
+    }
+    .data-table tbody tr {
+      background: #fff;
+      transition: background 0.2s;
+    }
+    .data-table tbody tr:nth-child(even) { background: #f8fafc; }
+    .data-table tbody tr:hover td { background: #f1f5f9; }
+
+    .progress-cell {
+      min-width: 120px;
+      width: 100%;
+      max-width: 100%;
+    }
+    .progress-cell__value { font-size: 0.75rem; margin-bottom: 0.25rem; line-height: 1.2; }
+
+    /* PrimeNG homolog: ProgressBar (Lara Light Blue) */
+    .p-progressbar {
+      display: block;
+      position: relative;
+      overflow: hidden;
+      height: var(--p-progressbar-height);
+      background: var(--p-progressbar-background);
+      border-radius: var(--p-progressbar-border-radius);
+    }
+    .p-progressbar--compact {
+      height: 8px;
+      border-radius: 4px;
+    }
+    .p-progressbar--medium {
+      height: 10px;
+      border-radius: 5px;
+    }
+    .p-progressbar-determinate .p-progressbar-value {
+      height: 100%;
+      width: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: var(--p-progressbar-value-background);
+      border-radius: inherit;
+      transition: width 0.3s ease;
+    }
+    .p-progressbar-success .p-progressbar-value { background: var(--p-progressbar-success); }
+    .p-progressbar-danger .p-progressbar-value { background: var(--p-progressbar-danger); }
+    .p-progressbar-secondary .p-progressbar-value { background: var(--p-progressbar-secondary); }
+
+    .p-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      line-height: 1.2;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .p-tag--success { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+    .p-tag--warn { background: #ffedd5; color: #c2410c; border-color: #fed7aa; }
+    .p-tag--info { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+    .p-tag--help { background: #f3e8ff; color: #7e22ce; border-color: #e9d5ff; }
+    .p-tag--secondary { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .p-tag--danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+
+    .table-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--primary-color);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+      position: relative;
+    }
+    .table-action-btn:hover { background: #eff6ff; color: #2563eb; }
+
+    .table-paginator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      margin: 0;
+      border-top: 1px solid #e2e8f0;
+      background: #fff;
+    }
+    .table-paginator__cluster {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+    }
+    .table-paginator__pages {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+    }
+    .table-pag-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #64748b;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 400;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      line-height: 1;
+      padding: 0;
+    }
+    .table-pag-btn.table-pag-nav {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 4px;
+    }
+    .table-pag-btn.table-pag-nav .pi { font-size: 0.7rem; }
+    .table-pag-btn:hover:not(:disabled):not(.is-active) {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    .table-pag-btn.is-active {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .table-pag-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+      pointer-events: none;
+    }
+    .table-paginator__size {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 0.5rem;
+    }
+    .table-paginator__select-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .table-paginator__select {
+      appearance: none;
+      height: 36px;
+      min-width: 4.5rem;
+      padding: 0 1.75rem 0 0.75rem;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: #fff;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--text-color);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .table-paginator__select:hover,
+    .table-paginator__select:focus {
+      border-color: var(--primary-color);
+    }
+    .table-paginator__select-icon {
+      position: absolute;
+      right: 0.65rem;
+      pointer-events: none;
+      font-size: 0.7rem;
+      color: #64748b;
+    }
+
+    .wave-summary {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      margin-bottom: var(--section-gap);
+    }
+    .wave-summary__header {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .wave-summary__title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 0;
+    }
+    .wave-summary__body {
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .wave-summary__identity {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .wave-summary__id-block { flex: 1 1 280px; min-width: 0; }
+    .wave-summary__id-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-color-secondary);
+      margin-bottom: 0.35rem;
+    }
+    .wave-summary__id-value {
+      display: block;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-heading);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .wave-summary__meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+    .wave-summary__date {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+    }
+    .wave-summary__metrics {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .wave-kpi {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.45rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.5rem 0.6rem;
+      min-width: 0;
+    }
+    .wave-kpi__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.65rem;
+      height: 1.65rem;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #64748b;
+      flex-shrink: 0;
+      font-size: 0.75rem;
+    }
+    .wave-kpi__content {
+      min-width: 0;
+      flex: 1;
+    }
+    .wave-kpi__label {
+      display: block;
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--text-color-secondary);
+      margin-bottom: 0.15rem;
+      line-height: 1.2;
+    }
+    .wave-kpi__value {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      line-height: 1.15;
+    }
+    .wave-progress-panel {
+      background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.65rem 0.85rem;
+    }
+    .wave-progress-panel__top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.35rem;
+    }
+    .wave-progress-panel__label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #334155;
+    }
+    .wave-progress-panel__pct {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      line-height: 1;
+    }
+    .wave-progress-panel__detail {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 0.75rem;
+    }
+    .wave-progress-panel .p-progressbar {
+      width: 100%;
+    }
+    .wave-progress-panel .progress-cell { width: 100%; max-width: none; }
+    .wave-progress-panel .progress-cell__value { display: none; }
+
+    @media (max-width: 992px) {
+      .wave-summary__metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 576px) {
+      .wave-summary__metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .wave-summary__meta { width: 100%; }
+    }
+
+    .loader-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+    }
+    .loader-overlay.hidden { display: none; }
+    .loader-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .loader-card .pi { color: var(--primary-color); }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 1300;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 0.85rem 1.1rem;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      max-width: 420px;
+      font-size: 0.85rem;
+    }
+    .toast.hidden { display: none; }
+
+    @media (max-width: 992px) {
+      .criteria-bar { gap: 0.6rem; }
+      .criteria-field--daterange,
+      .criteria-field--select,
+      .criteria-field--text {
+        width: calc(50% - 0.4rem);
+        max-width: none;
+        flex: 0 0 calc(50% - 0.4rem);
+      }
+      .criteria-field--actions {
+        width: 100%;
+        flex: 0 0 100%;
+      }
+      .criteria-field--actions .criteria-actions {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+    @media (max-width: 576px) {
+      .criteria-field--daterange,
+      .criteria-field--select,
+      .criteria-field--text {
+        width: 100%;
+        max-width: none;
+        flex: 0 0 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap" id="app">
+    <!-- HU.01 Listado -->
+    <div id="listView">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        Reportes &gt; Reporte detallado de olas
+      </nav>
+      <header class="page-header">
+        <div class="page-header__main">
+          <h1>Reporte detallado de olas</h1>
+        </div>
+        <div class="page-header__meta">Última actualización: 15/04/2026 10:30 a. m.</div>
+      </header>
+
+      <section class="criteria-bar" id="listCriteriaBar" aria-label="Criterios de búsqueda">
+        <div class="criteria-field criteria-field--daterange">
+          <label for="listDateRange">Fecha de creación</label>
+          <input type="text" class="form-input" id="listDateRange" placeholder="dd/mm/aaaa — dd/mm/aaaa" readonly autocomplete="off">
+          <span class="form-error" id="errListDate">La fecha de fin debe ser igual o posterior a la fecha de inicio.</span>
+        </div>
+        <div class="criteria-field criteria-field--select">
+          <label for="listStatusTrigger">Estatus de ola</label>
+          <div class="multiselect" id="listStatusMs" data-placeholder="Todos"></div>
+        </div>
+        <div class="criteria-field criteria-field--text">
+          <label for="listWaveId">Identificador de ola</label>
+          <input type="text" class="form-input" id="listWaveId" placeholder="Identificador de ola">
+        </div>
+        <div class="criteria-field criteria-field--actions">
+          <div class="criteria-actions">
+            <button type="button" class="btn-clear-filters" id="listClearBtn" disabled>
+              <i class="pi pi-eraser" aria-hidden="true"></i> Limpiar filtros
+            </button>
+            <button type="button" class="btn btn-primary" id="listSearchBtn" disabled>
+              <i class="pi pi-search" aria-hidden="true"></i> Buscar
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div id="listResults" class="hidden">
+        <div class="table-toolbar" id="listTableToolbar">
+          <div class="table-toolbar__left">
+            <button type="button" class="btn-icon-action btn-icon-action--export" id="listExportBtn" disabled aria-disabled="true" data-tooltip="Exportar todos los registros" aria-label="Exportar todos los registros">
+              <i class="pi pi-file-excel" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div id="listEmpty" class="hidden">
+          <div class="warning-panel" role="alert">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+            <div>
+              <div class="warning-title">Sin resultados</div>
+              <div class="warning-body">No se encontraron olas con los criterios ingresados.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card hidden" id="listTableCard">
+          <div class="data-table-scroll-pane">
+            <table class="data-table data-table--scroll" id="listTable">
+              <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col class="col-progress">
+                <col>
+                <col class="col-actions">
+              </colgroup>
+              <thead>
+                <tr class="header-row" id="listTableHead"></tr>
+                <tr class="filter-row" id="listTableFilterRow"></tr>
+              </thead>
+              <tbody id="listTableBody"></tbody>
+            </table>
+          </div>
+          <nav class="table-paginator" id="listPaginator" aria-label="Paginación de olas">
+            <div class="table-paginator__cluster">
+              <button type="button" class="table-pag-btn table-pag-nav" id="listBtnFirst" aria-label="Primera página" disabled>
+                <i class="pi pi-angle-double-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="table-pag-btn table-pag-nav" id="listBtnPrev" aria-label="Página anterior" disabled>
+                <i class="pi pi-angle-left" aria-hidden="true"></i>
+              </button>
+              <div class="table-paginator__pages" id="listPaginationPages"></div>
+              <button type="button" class="table-pag-btn table-pag-nav" id="listBtnNext" aria-label="Página siguiente" disabled>
+                <i class="pi pi-angle-right" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="table-pag-btn table-pag-nav" id="listBtnLast" aria-label="Última página" disabled>
+                <i class="pi pi-angle-double-right" aria-hidden="true"></i>
+              </button>
+              <div class="table-paginator__size">
+                <label class="table-paginator__select-wrap">
+                  <select id="listPageSize" class="table-paginator__select" aria-label="Registros por página">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                  </select>
+                  <i class="pi pi-chevron-down table-paginator__select-icon" aria-hidden="true"></i>
+                </label>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- HU.02 Detalle -->
+    <div id="detailView" class="view-hidden">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="#" id="breadcrumbListLink">Reportes</a> &gt;
+        <a href="#" id="breadcrumbListReportLink">Reporte detallado de olas</a> &gt;
+        Detalle de ola
+      </nav>
+      <header class="page-header page-header--detail">
+        <div class="page-header__title-row">
+          <button type="button" class="p-button p-button-icon-only p-button-rounded p-button-text p-button-secondary" id="detailBackBtn" data-tooltip="Volver al listado" aria-label="Volver al listado">
+            <span class="p-button-icon pi pi-arrow-left" aria-hidden="true"></span>
+          </button>
+          <h1 id="detailTitle">Detalle de la ola</h1>
+        </div>
+        <div class="table-toolbar" id="taskTableToolbar">
+          <div class="table-toolbar__left">
+            <button type="button" class="btn-icon-action btn-icon-action--export" id="detailExportBtn" disabled aria-disabled="true" data-tooltip="Exportar detalle de ola" aria-label="Exportar detalle de ola">
+              <i class="pi pi-file-excel" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="wave-summary" aria-label="Información de la ola">
+        <div class="wave-summary__header">
+          <h3 class="wave-summary__title">Información de la ola</h3>
+        </div>
+        <div id="waveSummaryContent" class="wave-summary__body"></div>
+      </section>
+
+      <section class="criteria-bar" id="taskCriteriaBar" aria-label="Filtros de tareas">
+        <div class="criteria-field criteria-field--select">
+          <label for="taskTipoTrigger">Tipo de tarea</label>
+          <div class="multiselect" id="taskTipoMs" data-placeholder="Todos"></div>
+        </div>
+        <div class="criteria-field criteria-field--select">
+          <label for="taskUsuarioTrigger">Usuario</label>
+          <div class="multiselect" id="taskUsuarioMs" data-placeholder="Todos"></div>
+        </div>
+        <div class="criteria-field criteria-field--select">
+          <label for="taskZonaTrigger">Zona de trabajo</label>
+          <div class="multiselect" id="taskZonaMs" data-placeholder="Todas"></div>
+        </div>
+        <div class="criteria-field criteria-field--select">
+          <label for="taskStageTrigger">Stage</label>
+          <div class="multiselect" id="taskStageMs" data-placeholder="Todos"></div>
+        </div>
+        <div class="criteria-field criteria-field--select">
+          <label for="taskEstatusTrigger">Estatus</label>
+          <div class="multiselect" id="taskEstatusMs" data-placeholder="Todos"></div>
+        </div>
+        <div class="criteria-field criteria-field--actions">
+          <div class="criteria-actions">
+            <button type="button" class="btn-clear-filters" id="taskClearBtn" disabled>
+              <i class="pi pi-eraser" aria-hidden="true"></i> Limpiar filtros
+            </button>
+            <button type="button" class="btn btn-primary" id="taskSearchBtn" disabled>
+              <i class="pi pi-search" aria-hidden="true"></i> Buscar
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div id="taskEmpty" class="hidden">
+        <div class="warning-panel" role="alert">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <div>
+            <div class="warning-title">Sin resultados</div>
+            <div class="warning-body">No se encontraron tareas con los criterios ingresados.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="taskTableCard">
+        <div class="data-table-scroll-pane">
+          <table class="data-table data-table--scroll" id="taskTable">
+            <thead>
+              <tr class="header-row" id="taskTableHead"></tr>
+              <tr class="filter-row" id="taskTableFilterRow"></tr>
+            </thead>
+            <tbody id="taskTableBody"></tbody>
+          </table>
+        </div>
+        <nav class="table-paginator" id="taskPaginator" aria-label="Paginación de tareas">
+          <div class="table-paginator__cluster">
+            <button type="button" class="table-pag-btn table-pag-nav" id="taskBtnFirst" aria-label="Primera página" disabled>
+              <i class="pi pi-angle-double-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="table-pag-btn table-pag-nav" id="taskBtnPrev" aria-label="Página anterior" disabled>
+              <i class="pi pi-angle-left" aria-hidden="true"></i>
+            </button>
+            <div class="table-paginator__pages" id="taskPaginationPages"></div>
+            <button type="button" class="table-pag-btn table-pag-nav" id="taskBtnNext" aria-label="Página siguiente" disabled>
+              <i class="pi pi-angle-right" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="table-pag-btn table-pag-nav" id="taskBtnLast" aria-label="Última página" disabled>
+              <i class="pi pi-angle-double-right" aria-hidden="true"></i>
+            </button>
+            <div class="table-paginator__size">
+              <label class="table-paginator__select-wrap">
+                <select id="taskPageSize" class="table-paginator__select" aria-label="Registros por página">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                </select>
+                <i class="pi pi-chevron-down table-paginator__select-icon" aria-hidden="true"></i>
+              </label>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <div class="loader-overlay hidden" id="loaderOverlay" role="status" aria-live="polite">
+    <div class="loader-card">
+      <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+      <span id="loaderText">Procesando...</span>
+    </div>
+  </div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
+  <script>
+(function () {
+  'use strict';
+
+  var MOCK = {
+    waves: [
+      { id: '29-ABR-JHON FREDY PEÑA-677440', fecha: '28/04/2026 20:46:43', ordenes: 6, lineas: 49, solicitada: 1844, planeada: 1617, surtida: 162, estatus: 'Liberada' },
+      { id: '29-ABR-JHON FREDY PEÑA-677441', fecha: '28/04/2026 20:46:43', ordenes: 1, lineas: 1, solicitada: 1, planeada: 1, surtida: 0, estatus: 'Creada' },
+      { id: '29-ABR-JHON FREDY PEÑA-677442', fecha: '28/04/2026 20:46:43', ordenes: 1, lineas: 1, solicitada: 1, planeada: 1, surtida: 1, estatus: 'En progreso' },
+      { id: '29-ABR-JHON FREDY PEÑA-677443', fecha: '27/04/2026 18:30:00', ordenes: 3, lineas: 12, solicitada: 450, planeada: 400, surtida: 400, estatus: 'Completada' },
+      { id: '29-ABR-JHON FREDY PEÑA-677444', fecha: '26/04/2026 09:15:22', ordenes: 2, lineas: 5, solicitada: 120, planeada: 100, surtida: 0, estatus: 'Cancelada' },
+      { id: '29-ABR-JHON FREDY PEÑA-677445', fecha: '25/04/2026 14:20:10', ordenes: 4, lineas: 18, solicitada: 320, planeada: 280, surtida: 0, estatus: 'Asignada' }
+    ],
+    tasks: {
+      '29-ABR-JHON FREDY PEÑA-677440': [
+        { taskNo: 100645, tipo: 'Surtido de lista', zona: 'Zona de productos secos y refrigerados', stage: 'STAGE DE DESPACHO 39', estatus: 'En progreso', usuario: 'EDWIN OBREGON', horaInicio: '10:00:00 a. m.', horaFin: null, peso: 182, pedidos: 1, hasPick: true, hasPut: false },
+        { taskNo: 100646, tipo: 'Surtido de pallet', zona: 'Zona de abarrotes', stage: 'STAGE DE DESPACHO 39', estatus: 'Disponible', usuario: null, horaInicio: null, horaFin: null, peso: 95, pedidos: 1, hasPick: false, hasPut: false },
+        { taskNo: 100647, tipo: 'Surtido de lista', zona: 'Zona de productos secos y refrigerados', stage: 'STAGE DE DESPACHO 39', estatus: 'Asignada', usuario: 'MARIA LOPEZ', horaInicio: null, horaFin: null, peso: 210, pedidos: 2, hasPick: false, hasPut: false },
+        { taskNo: 100648, tipo: 'Surtido de pallet', zona: 'Zona de abarrotes', stage: 'STAGE DE DESPACHO 39', estatus: 'Realizado', usuario: 'EDWIN OBREGON', horaInicio: '09:00:00 a. m.', horaFin: '09:00:00 a. m.', peso: 150, pedidos: 1, hasPick: true, hasPut: true },
+        { taskNo: 100649, tipo: 'Surtido de lista', zona: 'Zona de productos secos y refrigerados', stage: 'STAGE DE DESPACHO 39', estatus: 'Cancelada', usuario: 'MARIA LOPEZ', horaInicio: null, horaFin: null, peso: 88, pedidos: 1, hasPick: false, hasPut: false }
+      ]
+    }
+  };
+
+  var LIST_COLS = [
+    { key: 'id', label: 'Ola' },
+    { key: 'fecha', label: 'Fecha de la ola' },
+    { key: 'ordenes', label: 'Número de órdenes en la ola' },
+    { key: 'lineas', label: 'Número de líneas' },
+    { key: 'solicitada', label: 'Cantidad total solicitada' },
+    { key: 'planeada', label: 'Cantidad total planeada' },
+    { key: 'surtida', label: 'Cantidad total surtida' },
+    { key: 'pct', label: 'Porcentaje surtido vs. planeado' },
+    { key: 'estatus', label: 'Estatus de ola' },
+    { key: 'actions', label: 'Acciones', sortable: false, filterable: false }
+  ];
+
+  var TASK_COLS = [
+    { key: 'taskNo', label: 'Número de tarea' },
+    { key: 'tipo', label: 'Tipo de tarea' },
+    { key: 'zona', label: 'Zona de trabajo' },
+    { key: 'stage', label: 'Stage destino' },
+    { key: 'estatus', label: 'Estatus' },
+    { key: 'ola', label: 'Ola' },
+    { key: 'usuario', label: 'Usuario asignado' },
+    { key: 'horaInicio', label: 'Hora inicio' },
+    { key: 'horaFin', label: 'Hora fin' },
+    { key: 'peso', label: 'Peso' },
+    { key: 'pedidos', label: 'Cantidad de pedidos' }
+  ];
+
+  var listState = { results: [], page: 1, pageSize: 10, sortKey: 'fecha', sortDir: 'desc', hasSearched: false };
+  var taskState = { waveId: null, allTasks: [], results: [], page: 1, pageSize: 10, sortKey: 'taskNo', sortDir: 'asc', filterActive: false };
+  var listStatusMs, taskTipoMs, taskUsuarioMs, taskZonaMs, taskStageMs, taskEstatusMs;
+  var datePicker;
+
+  function $(id) { return document.getElementById(id); }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatNum(n) {
+    return Number(n).toLocaleString('es-MX');
+  }
+
+  function formatPorcentajeSimbolo(pct) {
+    return Number(pct).toFixed(2) + '%';
+  }
+
+  function formatPorcentajeSimboloHtml(pct) {
+    return escapeHtml(formatPorcentajeSimbolo(pct));
+  }
+
+  function calcPct(surtida, planeada) {
+    if (!planeada) return 0;
+    return (surtida / planeada) * 100;
+  }
+
+  function parseDmY(str) {
+    if (!str) return null;
+    var p = str.trim().split('/');
+    if (p.length !== 3) return null;
+    return new Date(+p[2], +p[1] - 1, +p[0]);
+  }
+
+  function parseWaveDate(str) {
+    var p = str.split(' ');
+    return parseDmY(p[0]);
+  }
+
+  function dateOnlyKey(d) {
+    if (!d) return null;
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  function buildMockWaveDates() {
+    var dayOffsets = [0, 0, 1, 2, 3, 4];
+    var times = ['20:46:43', '20:46:43', '20:46:43', '18:30:00', '09:15:22', '14:20:10'];
+    MOCK.waves.forEach(function (w, i) {
+      var d = new Date();
+      d.setDate(d.getDate() - dayOffsets[i]);
+      w.fecha = pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + times[i];
+    });
+  }
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  function buildExportFileName(prefix, suffix) {
+    var d = new Date();
+    var stamp = pad2(d.getDate()) + pad2(d.getMonth() + 1) + d.getFullYear() + '_' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+    return prefix + (suffix ? '_' + suffix : '') + '_' + stamp + '.xlsx';
+  }
+
+  function showToast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(function () { t.classList.add('hidden'); }, 3500);
+  }
+
+  function setLoading(on, text) {
+    $('loaderText').textContent = text || 'Procesando...';
+    $('loaderOverlay').classList.toggle('hidden', !on);
+    $('app').classList.toggle('is-loading', on);
+  }
+
+  var MAX_VISIBLE_CHIPS = 2;
+
+  var LIST_STATUS_OPTIONS = ['Creada', 'Asignada', 'En progreso', 'Liberada', 'Completada', 'Cancelada'];
+  var SELECT_ALL_LABEL = 'Seleccionar todo';
+
+  function createMultiselect(rootId, options, config) {
+    config = config || {};
+    var selectAllLabel = config.selectAllLabel || null;
+    var allValues = options.slice();
+    var panelOptions = selectAllLabel ? [selectAllLabel].concat(allValues) : allValues;
+    var root = $(rootId);
+    var placeholder = root.getAttribute('data-placeholder') || 'Todos';
+    var selected = new Set();
+    var triggerId = rootId.replace(/Ms$/, 'Trigger');
+    root.innerHTML =
+      '<div class="multiselect-trigger" id="' + triggerId + '" role="combobox" aria-expanded="false" aria-haspopup="listbox" tabindex="0">' +
+        '<div class="multiselect-values"><span class="multiselect-placeholder">' + escapeHtml(placeholder) + '</span></div>' +
+        '<span class="multiselect-arrow pi pi-chevron-down" aria-hidden="true"></span>' +
+      '</div>' +
+      '<div class="multiselect-panel" role="listbox"></div>';
+    var trigger = root.querySelector('.multiselect-trigger');
+    var panel = root.querySelector('.multiselect-panel');
+    var valuesEl = root.querySelector('.multiselect-values');
+
+    panelOptions.forEach(function (opt) {
+      var row = document.createElement('label');
+      row.className = 'multiselect-option';
+      row.innerHTML = '<input type="checkbox" value="' + escapeHtml(opt) + '"> ' + escapeHtml(opt);
+      panel.appendChild(row);
+    });
+
+    function isAllSelected() {
+      return allValues.every(function (v) { return selected.has(v); });
+    }
+
+    function selectAll() {
+      selected.clear();
+      if (selectAllLabel) selected.add(selectAllLabel);
+      allValues.forEach(function (v) { selected.add(v); });
+    }
+
+    function clearAll() {
+      selected.clear();
+    }
+
+    function syncCheckboxes() {
+      panel.querySelectorAll('input').forEach(function (cb) {
+        cb.checked = selected.has(cb.value);
+      });
+    }
+
+    function togglePanel(forceOpen) {
+      var isOpen = panel.classList.contains('open');
+      var open = forceOpen === true ? true : forceOpen === false ? false : !isOpen;
+      if (open) {
+        document.querySelectorAll('.multiselect-panel.open').forEach(function (p) {
+          if (p !== panel) {
+            p.classList.remove('open');
+            var otherTrigger = p.parentElement && p.parentElement.querySelector('.multiselect-trigger');
+            if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+      panel.classList.toggle('open', open);
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function removeValue(value) {
+      if (selectAllLabel && value === selectAllLabel) {
+        clearAll();
+      } else {
+        selected.delete(value);
+        if (selectAllLabel) selected.delete(selectAllLabel);
+      }
+      syncCheckboxes();
+      renderValues();
+      root.dispatchEvent(new CustomEvent('change'));
+    }
+
+    function renderValues() {
+      valuesEl.innerHTML = '';
+      if (!selected.size) {
+        valuesEl.innerHTML = '<span class="multiselect-placeholder">' + escapeHtml(placeholder) + '</span>';
+        return;
+      }
+      var displayValues = Array.from(selected).filter(function (v) { return v !== selectAllLabel; });
+      displayValues.slice(0, MAX_VISIBLE_CHIPS).forEach(function (value) {
+        var chip = document.createElement('span');
+        chip.className = 'multiselect-chip';
+        chip.innerHTML = escapeHtml(value) +
+          ' <button type="button" aria-label="Quitar ' + escapeHtml(value) + '"><i class="pi pi-times"></i></button>';
+        chip.querySelector('button').addEventListener('click', function (e) {
+          e.stopPropagation();
+          removeValue(value);
+        });
+        valuesEl.appendChild(chip);
+      });
+      var remaining = displayValues.length - MAX_VISIBLE_CHIPS;
+      if (remaining > 0) {
+        var more = document.createElement('span');
+        more.className = 'multiselect-chip multiselect-chip--more';
+        more.textContent = '+' + remaining + ' más';
+        more.addEventListener('click', function (e) {
+          e.stopPropagation();
+          togglePanel(true);
+        });
+        valuesEl.appendChild(more);
+      }
+    }
+
+    function handleCheckboxChange(cb) {
+      if (selectAllLabel && cb.value === selectAllLabel) {
+        if (cb.checked) selectAll();
+        else clearAll();
+      } else if (cb.checked) {
+        selected.add(cb.value);
+        if (selectAllLabel && isAllSelected()) selected.add(selectAllLabel);
+      } else {
+        selected.delete(cb.value);
+        if (selectAllLabel) selected.delete(selectAllLabel);
+      }
+      syncCheckboxes();
+      renderValues();
+      root.dispatchEvent(new CustomEvent('change'));
+    }
+
+    trigger.addEventListener('click', function (e) {
+      e.stopPropagation();
+      togglePanel();
+    });
+    trigger.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        togglePanel();
+      }
+    });
+
+    panel.querySelectorAll('input').forEach(function (cb) {
+      cb.addEventListener('change', function () { handleCheckboxChange(cb); });
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!root.contains(e.target)) togglePanel(false);
+    });
+
+    return {
+      getSelected: function () { return Array.from(selected); },
+      clear: function () {
+        clearAll();
+        syncCheckboxes();
+        renderValues();
+      },
+      hasSelection: function () { return selected.size > 0; }
+    };
+  }
+
+  function getEffectiveStatusFilter(statuses) {
+    if (!statuses || !statuses.length) return null;
+    var values = statuses.filter(function (s) { return s !== SELECT_ALL_LABEL; });
+    if (!values.length || values.length >= LIST_STATUS_OPTIONS.length) return null;
+    return values;
+  }
+
+  function getListDateRange() {
+    if (datePicker && datePicker.selectedDates && datePicker.selectedDates.length) {
+      var start = datePicker.selectedDates[0];
+      var end = datePicker.selectedDates[1] || datePicker.selectedDates[0];
+      return { start: start, end: end, complete: datePicker.selectedDates.length >= 2 };
+    }
+    var dateVal = $('listDateRange').value.trim();
+    if (!dateVal) return null;
+    var parts = dateVal.split(/\s+(?:a|to)\s+|\s*[—–-]\s*/i);
+    var start = parseDmY(parts[0]);
+    var end = parts.length > 1 ? parseDmY(parts[1]) : start;
+    if (!start) return null;
+    if (!end) end = start;
+    return { start: start, end: end, complete: parts.length > 1 };
+  }
+
+  function getListCriteria() {
+    var waveId = $('listWaveId').value.trim();
+    var statuses = listStatusMs.getSelected();
+    var range = getListDateRange();
+    var hasDate = !!range;
+    var hasId = !!waveId;
+    var hasStatus = statuses.length > 0;
+    var validDate = true;
+    if (hasDate) {
+      var today = new Date();
+      if (!range.start || dateOnlyKey(range.start) > dateOnlyKey(today)) validDate = false;
+      if (range.complete && dateOnlyKey(range.end) < dateOnlyKey(range.start)) validDate = false;
+    }
+    $('errListDate').classList.toggle('visible', hasDate && !validDate);
+    $('listDateRange').classList.toggle('invalid', hasDate && !validDate);
+    return {
+      hasAny: hasDate || hasId || hasStatus,
+      valid: validDate,
+      range: range,
+      waveId: waveId,
+      statuses: statuses
+    };
+  }
+
+  function updateListButtons() {
+    var c = getListCriteria();
+    $('listSearchBtn').disabled = !(c.valid && c.hasAny);
+    $('listClearBtn').disabled = !c.hasAny && !listState.hasSearched;
+    $('listExportBtn').disabled = !(listState.hasSearched && listState.results.length > 0);
+    $('listExportBtn').setAttribute('aria-disabled', listState.hasSearched && listState.results.length > 0 ? 'false' : 'true');
+  }
+
+  function showListInitialState() {
+    listState.hasSearched = false;
+    listState.results = [];
+    listState.page = 1;
+    $('listResults').classList.add('hidden');
+    $('listEmpty').classList.add('hidden');
+    $('listTableCard').classList.add('hidden');
+    $('listCriteriaBar').classList.remove('is-sticky');
+    updateListButtons();
+  }
+
+  function waveMatches(w, criteria, useDate) {
+    if (criteria.waveId && w.id.toLowerCase().indexOf(criteria.waveId.toLowerCase()) === -1) return false;
+    var statusFilter = getEffectiveStatusFilter(criteria.statuses);
+    if (statusFilter && statusFilter.indexOf(w.estatus) === -1) return false;
+    if (useDate && criteria.range) {
+      var wf = parseWaveDate(w.fecha);
+      if (!wf) return false;
+      var startKey = dateOnlyKey(criteria.range.start);
+      var endKey = dateOnlyKey(criteria.range.end || criteria.range.start);
+      var waveKey = dateOnlyKey(wf);
+      if (waveKey < startKey || waveKey > endKey) return false;
+    }
+    return true;
+  }
+
+  function filterWaves(criteria) {
+    if (new URLSearchParams(location.search).get('scenario') === 'empty') return [];
+    var results = MOCK.waves.filter(function (w) { return waveMatches(w, criteria, true); });
+    if (!results.length && criteria.range) {
+      results = MOCK.waves.filter(function (w) { return waveMatches(w, criteria, false); });
+    }
+    if (!results.length) results = MOCK.waves.slice();
+    return results;
+  }
+
+  function tagClass(estatus) {
+    var map = {
+      'Creada': 'p-tag--secondary',
+      'Asignada': 'p-tag--info',
+      'En progreso': 'p-tag--warn',
+      'Liberada': 'p-tag--help',
+      'Completada': 'p-tag--success',
+      'Cancelada': 'p-tag--danger',
+      'Disponible': 'p-tag--secondary',
+      'Realizado': 'p-tag--success'
+    };
+    return map[estatus] || 'p-tag--secondary';
+  }
+
+  function getProgressSeverity(pct) {
+    if (pct <= 0) return 'secondary';
+    if (pct < 50) return 'danger';
+    return 'success';
+  }
+
+  function renderProgressBarOnly(pct, sizeClass) {
+    var width = Math.min(pct, 100);
+    var severity = getProgressSeverity(pct);
+    var size = sizeClass || ' p-progressbar--medium';
+    return '<div class="p-progressbar p-progressbar-determinate p-progressbar-' + severity + size + '" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + width + '">' +
+      '<div class="p-progressbar-value" style="width:' + width + '%"></div></div>';
+  }
+
+  function renderWaveSummary(wave) {
+    var pct = calcPct(wave.surtida, wave.planeada);
+    var kpis = [
+      { label: 'Número de órdenes', value: formatNum(wave.ordenes), icon: 'pi-file' },
+      { label: 'Número de líneas', value: formatNum(wave.lineas), icon: 'pi-list' },
+      { label: 'Cantidad solicitada', value: formatNum(wave.solicitada), icon: 'pi-inbox' },
+      { label: 'Cantidad planeada', value: formatNum(wave.planeada), icon: 'pi-calendar' },
+      { label: 'Cantidad surtida', value: formatNum(wave.surtida), icon: 'pi-check-circle' }
+    ];
+    var kpiHtml = kpis.map(function (kpi) {
+      return '<div class="wave-kpi">' +
+        '<span class="wave-kpi__icon"><i class="pi ' + kpi.icon + '" aria-hidden="true"></i></span>' +
+        '<div class="wave-kpi__content">' +
+          '<span class="wave-kpi__label">' + escapeHtml(kpi.label) + '</span>' +
+          '<span class="wave-kpi__value">' + escapeHtml(kpi.value) + '</span>' +
+        '</div></div>';
+    }).join('');
+
+    return (
+      '<div class="wave-summary__identity">' +
+        '<div class="wave-summary__id-block">' +
+          '<span class="wave-summary__id-label">Ola / Folio</span>' +
+          '<span class="wave-summary__id-value">' + escapeHtml(wave.id) + '</span>' +
+        '</div>' +
+        '<div class="wave-summary__meta">' +
+          '<span class="wave-summary__date">' + escapeHtml(wave.fecha) + '</span>' +
+          '<span class="p-tag ' + tagClass(wave.estatus) + '">' + escapeHtml(wave.estatus) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="wave-summary__metrics">' + kpiHtml + '</div>' +
+      '<div class="wave-progress-panel">' +
+        '<div class="wave-progress-panel__top">' +
+          '<span class="wave-progress-panel__label">Porcentaje surtido vs. planeado</span>' +
+          '<span class="wave-progress-panel__pct">' + formatPorcentajeSimboloHtml(pct) + '</span>' +
+        '</div>' +
+        '<div class="wave-progress-panel__detail">' +
+          escapeHtml(formatNum(wave.surtida)) + ' surtidas de ' + escapeHtml(formatNum(wave.planeada)) + ' planeadas' +
+        '</div>' +
+        renderProgressBarOnly(pct) +
+      '</div>'
+    );
+  }
+
+  function renderProgress(pct) {
+    return '<div class="progress-cell"><div class="progress-cell__value">' + formatPorcentajeSimboloHtml(pct) + '</div>' +
+      renderProgressBarOnly(pct, ' p-progressbar--compact') + '</div>';
+  }
+
+  function sortData(data, key, dir, numericKeys) {
+    var mul = dir === 'asc' ? 1 : -1;
+    return data.slice().sort(function (a, b) {
+      var av = a[key], bv = b[key];
+      if (key === 'pct') {
+        av = calcPct(a.surtida, a.planeada);
+        bv = calcPct(b.surtida, b.planeada);
+      }
+      if (numericKeys.indexOf(key) >= 0) return (Number(av) - Number(bv)) * mul;
+      return String(av).localeCompare(String(bv), 'es') * mul;
+    });
+  }
+
+  function buildFilterRowHtml(cols) {
+    var html = '';
+    for (var i = 0; i < cols.length; i++) {
+      var col = cols[i];
+      var extraClass = '';
+      if (col.key === 'pct') extraClass += ' col-progress';
+      if (col.key === 'actions') extraClass += ' col-actions';
+      if (col.key === 'actions' || col.filterable === false) {
+        html += '<th class="filter-cell' + extraClass + '"></th>';
+        continue;
+      }
+      html += '<th class="filter-cell' + extraClass + '"><div class="table-filter-field">' +
+        '<input class="table-filter-input" type="text" readonly tabindex="-1" aria-label="Filtro de columna' +
+        (col.label ? ': ' + col.label : '') + '">' +
+        '<button type="button" class="table-filter-btn" tabindex="-1" aria-hidden="true"><i class="pi pi-filter"></i></button>' +
+        '</div></th>';
+    }
+    return html;
+  }
+
+  function buildSortHeader(col, state) {
+    if (col.sortable === false) {
+      return '<th class="col-actions"><span class="col-header-content"><span class="col-header-text">' +
+        escapeHtml(col.label) + '</span></span></th>';
+    }
+    var sortIcon = 'pi-sort-alt';
+    if (state.sortKey === col.key) {
+      sortIcon = state.sortDir === 'asc' ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down';
+    }
+    var extraClass = col.key === 'pct' ? ' col-progress' : '';
+    return '<th class="sortable' + extraClass + '" data-key="' + col.key + '"><span class="col-header-content"><span class="col-header-text">' +
+      escapeHtml(col.label) + '</span><i class="pi ' + sortIcon + ' sort-icon" aria-hidden="true"></i></span></th>';
+  }
+
+  function bindSortHandlers(headId, state, renderFn) {
+    $(headId).querySelectorAll('th.sortable').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var key = th.getAttribute('data-key');
+        if (state.sortKey === key) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+        else { state.sortKey = key; state.sortDir = 'asc'; }
+        renderFn();
+      });
+    });
+  }
+
+  function getVisiblePages(totalPages, currentPage) {
+    if (totalPages <= 5) {
+      var all = [];
+      for (var i = 1; i <= totalPages; i++) all.push(i);
+      return all;
+    }
+    var end = Math.min(totalPages, currentPage + 2);
+    var start = Math.max(1, end - 4);
+    end = Math.min(totalPages, start + 4);
+    start = Math.max(1, end - 4);
+    var pages = [];
+    for (var p = start; p <= end; p++) pages.push(p);
+    return pages;
+  }
+
+  function renderPagination(prefix, state, total) {
+    var totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+    var hasItems = total > 0;
+    $(prefix + 'BtnFirst').disabled = !hasItems || state.page <= 1;
+    $(prefix + 'BtnPrev').disabled = !hasItems || state.page <= 1;
+    $(prefix + 'BtnNext').disabled = !hasItems || state.page >= totalPages;
+    $(prefix + 'BtnLast').disabled = !hasItems || state.page >= totalPages;
+    var pagesEl = $(prefix + 'PaginationPages');
+    pagesEl.innerHTML = '';
+    getVisiblePages(totalPages, state.page).forEach(function (pageNumber) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'table-pag-btn' + (pageNumber === state.page ? ' is-active' : '');
+      button.textContent = String(pageNumber);
+      button.setAttribute('aria-label', 'Página ' + pageNumber);
+      button.setAttribute('data-page', String(pageNumber));
+      if (pageNumber === state.page) button.setAttribute('aria-current', 'page');
+      pagesEl.appendChild(button);
+    });
+    return totalPages;
+  }
+
+  function wirePagination(prefix, state, renderFn) {
+    $(prefix + 'BtnFirst').addEventListener('click', function () { state.page = 1; renderFn(); });
+    $(prefix + 'BtnPrev').addEventListener('click', function () { if (state.page > 1) { state.page--; renderFn(); } });
+    $(prefix + 'BtnNext').addEventListener('click', function () { state.page++; renderFn(); });
+    $(prefix + 'BtnLast').addEventListener('click', function () {
+      var total = prefix === 'list' ? listState.results.length : taskState.results.length;
+      state.page = Math.max(1, Math.ceil(total / state.pageSize));
+      renderFn();
+    });
+    $(prefix + 'PaginationPages').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-page]');
+      if (!btn) return;
+      state.page = +btn.getAttribute('data-page');
+      renderFn();
+    });
+  }
+
+  function initTableHeaders() {
+    $('listTableHead').innerHTML = LIST_COLS.map(function (col) { return buildSortHeader(col, listState); }).join('');
+    $('listTableFilterRow').innerHTML = buildFilterRowHtml(LIST_COLS);
+    bindSortHandlers('listTableHead', listState, renderListTable);
+
+    $('taskTableHead').innerHTML = TASK_COLS.map(function (col) { return buildSortHeader(col, taskState); }).join('');
+    $('taskTableFilterRow').innerHTML = buildFilterRowHtml(TASK_COLS);
+    bindSortHandlers('taskTableHead', taskState, renderTaskTable);
+  }
+
+  function renderListTable() {
+    var sorted = sortData(listState.results, listState.sortKey, listState.sortDir, ['ordenes', 'lineas', 'solicitada', 'planeada', 'surtida', 'pct']);
+    var total = sorted.length;
+    renderPagination('list', listState, total);
+    var start = (listState.page - 1) * listState.pageSize;
+    var pageItems = sorted.slice(start, start + listState.pageSize);
+
+    $('listTableHead').innerHTML = LIST_COLS.map(function (col) { return buildSortHeader(col, listState); }).join('');
+    $('listTableFilterRow').innerHTML = buildFilterRowHtml(LIST_COLS);
+    bindSortHandlers('listTableHead', listState, renderListTable);
+
+    var body = $('listTableBody');
+    body.innerHTML = pageItems.map(function (w) {
+      var pct = calcPct(w.surtida, w.planeada);
+      return '<tr>' +
+        '<td title="' + escapeHtml(w.id) + '">' + escapeHtml(w.id) + '</td>' +
+        '<td>' + escapeHtml(w.fecha) + '</td>' +
+        '<td>' + formatNum(w.ordenes) + '</td>' +
+        '<td>' + formatNum(w.lineas) + '</td>' +
+        '<td>' + formatNum(w.solicitada) + '</td>' +
+        '<td>' + formatNum(w.planeada) + '</td>' +
+        '<td>' + formatNum(w.surtida) + '</td>' +
+        '<td class="col-progress">' + renderProgress(pct) + '</td>' +
+        '<td><span class="p-tag ' + tagClass(w.estatus) + '">' + escapeHtml(w.estatus) + '</span></td>' +
+        '<td class="col-actions"><button type="button" class="table-action-btn btn-detail" data-wave-id="' + escapeHtml(w.id) + '" data-tooltip="Ver detalle de ola" aria-label="Ver detalle de ola"><i class="pi pi-search"></i></button></td>' +
+      '</tr>';
+    }).join('');
+
+    body.querySelectorAll('.btn-detail').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        showDetailView(btn.getAttribute('data-wave-id'));
+      });
+    });
+  }
+
+  function applyListResults(results) {
+    listState.results = results;
+    listState.page = 1;
+    $('listResults').classList.remove('hidden');
+    if (!listState.results.length) {
+      $('listEmpty').classList.remove('hidden');
+      $('listTableCard').classList.add('hidden');
+    } else {
+      $('listEmpty').classList.add('hidden');
+      $('listTableCard').classList.remove('hidden');
+      renderListTable();
+    }
+    updateListButtons();
+  }
+
+  function runListSearch() {
+    var c = getListCriteria();
+    if (!c.valid || !c.hasAny) return;
+    listState.hasSearched = true;
+    $('listCriteriaBar').classList.add('is-sticky');
+    applyListResults(filterWaves(c));
+  }
+
+  function clearListFilters() {
+    if (datePicker) datePicker.clear();
+    else $('listDateRange').value = '';
+    $('listWaveId').value = '';
+    listStatusMs.clear();
+    $('errListDate').classList.remove('visible');
+    $('listDateRange').classList.remove('invalid');
+    showListInitialState();
+  }
+
+  function showListView() {
+    $('listView').classList.remove('view-hidden');
+    $('detailView').classList.add('view-hidden');
+    document.title = 'Reporte detallado de olas — WEP';
+  }
+
+  function showDetailView(waveId) {
+    taskState.waveId = waveId;
+    taskState.allTasks = (MOCK.tasks[waveId] || []).map(function (t) {
+      return Object.assign({}, t, { ola: waveId });
+    });
+    taskState.results = taskState.allTasks.slice();
+    taskState.page = 1;
+    taskState.filterActive = false;
+    taskState.sortKey = 'taskNo';
+    taskState.sortDir = 'asc';
+
+    var wave = MOCK.waves.find(function (w) { return w.id === waveId; }) || {
+      id: waveId, fecha: '—', ordenes: 0, lineas: 0, solicitada: 0, planeada: 0, surtida: 0, estatus: '—'
+    };
+
+    $('detailTitle').textContent = 'Detalle de la ola: ' + waveId;
+    $('waveSummaryContent').innerHTML = renderWaveSummary(wave);
+
+    taskTipoMs.clear();
+    taskUsuarioMs.clear();
+    taskZonaMs.clear();
+    taskStageMs.clear();
+    taskEstatusMs.clear();
+    $('taskEmpty').classList.add('hidden');
+    $('taskTableCard').classList.remove('hidden');
+    updateTaskSearchBtn();
+    updateDetailExportBtn();
+    renderTaskTable();
+
+    $('listView').classList.add('view-hidden');
+    $('detailView').classList.remove('view-hidden');
+    document.title = 'Detalle de ola — WEP';
+    window.scrollTo(0, 0);
+  }
+
+  function getTaskFilterCriteria() {
+    return {
+      tipos: taskTipoMs.getSelected(),
+      usuarios: taskUsuarioMs.getSelected(),
+      zonas: taskZonaMs.getSelected(),
+      stages: taskStageMs.getSelected(),
+      estatus: taskEstatusMs.getSelected()
+    };
+  }
+
+  function hasTaskFilters() {
+    var c = getTaskFilterCriteria();
+    return c.tipos.length || c.usuarios.length || c.zonas.length || c.stages.length || c.estatus.length;
+  }
+
+  function updateDetailExportBtn() {
+    var hasTasks = taskState.results.length > 0 && !$('taskTableCard').classList.contains('hidden');
+    $('detailExportBtn').disabled = !hasTasks;
+    $('detailExportBtn').setAttribute('aria-disabled', hasTasks ? 'false' : 'true');
+  }
+
+  function updateTaskSearchBtn() {
+    var hasFilters = hasTaskFilters();
+    $('taskSearchBtn').disabled = !hasFilters;
+    $('taskClearBtn').disabled = !hasFilters;
+  }
+
+  function filterTasks() {
+    var c = getTaskFilterCriteria();
+    return taskState.allTasks.filter(function (t) {
+      if (c.tipos.length && c.tipos.indexOf(t.tipo) === -1) return false;
+      if (c.usuarios.length) {
+        var u = t.usuario || 'Sin asignación';
+        if (c.usuarios.indexOf(u) === -1 && !(c.usuarios.indexOf('Sin asignación') >= 0 && !t.usuario)) return false;
+      }
+      if (c.zonas.length && c.zonas.indexOf(t.zona) === -1) return false;
+      if (c.stages.length && c.stages.indexOf(t.stage) === -1) return false;
+      if (c.estatus.length && c.estatus.indexOf(t.estatus) === -1) return false;
+      return true;
+    });
+  }
+
+  function renderTaskTable() {
+    var sorted = sortData(taskState.results, taskState.sortKey, taskState.sortDir, ['taskNo', 'peso', 'pedidos']);
+    var total = sorted.length;
+    renderPagination('task', taskState, total);
+    var start = (taskState.page - 1) * taskState.pageSize;
+    var pageItems = sorted.slice(start, start + taskState.pageSize);
+
+    $('taskTableHead').innerHTML = TASK_COLS.map(function (col) { return buildSortHeader(col, taskState); }).join('');
+    bindSortHandlers('taskTableHead', taskState, renderTaskTable);
+
+    $('taskTableBody').innerHTML = pageItems.map(function (t) {
+      var usuario = t.usuario ? escapeHtml(t.usuario) : 'Sin asignación';
+      var hi = t.hasPick && t.horaInicio ? escapeHtml(t.horaInicio) : '';
+      var hf = t.hasPut && t.horaFin ? escapeHtml(t.horaFin) : '';
+      return '<tr>' +
+        '<td>' + escapeHtml(t.taskNo) + '</td>' +
+        '<td title="' + escapeHtml(t.tipo) + '">' + escapeHtml(t.tipo) + '</td>' +
+        '<td title="' + escapeHtml(t.zona) + '">' + escapeHtml(t.zona) + '</td>' +
+        '<td title="' + escapeHtml(t.stage) + '">' + escapeHtml(t.stage) + '</td>' +
+        '<td><span class="p-tag ' + tagClass(t.estatus) + '">' + escapeHtml(t.estatus) + '</span></td>' +
+        '<td title="' + escapeHtml(t.ola) + '">' + escapeHtml(t.ola) + '</td>' +
+        '<td>' + usuario + '</td>' +
+        '<td>' + hi + '</td>' +
+        '<td>' + hf + '</td>' +
+        '<td>' + formatNum(t.peso) + '</td>' +
+        '<td>' + formatNum(t.pedidos) + '</td>' +
+      '</tr>';
+    }).join('');
+    updateDetailExportBtn();
+  }
+
+  function runTaskSearch() {
+    if (!hasTaskFilters()) return;
+    taskState.filterActive = true;
+    taskState.results = filterTasks();
+    taskState.page = 1;
+    if (!taskState.results.length) {
+      $('taskEmpty').classList.remove('hidden');
+      $('taskTableCard').classList.add('hidden');
+    } else {
+      $('taskEmpty').classList.add('hidden');
+      $('taskTableCard').classList.remove('hidden');
+      renderTaskTable();
+    }
+    updateDetailExportBtn();
+  }
+
+  function clearTaskFilters() {
+    taskTipoMs.clear();
+    taskUsuarioMs.clear();
+    taskZonaMs.clear();
+    taskStageMs.clear();
+    taskEstatusMs.clear();
+    taskState.filterActive = false;
+    taskState.results = taskState.allTasks.slice();
+    taskState.page = 1;
+    $('taskEmpty').classList.add('hidden');
+    $('taskTableCard').classList.remove('hidden');
+    updateTaskSearchBtn();
+    updateDetailExportBtn();
+    renderTaskTable();
+  }
+
+  function simulateExportList() {
+    setLoading(true, 'Exportando...');
+    setTimeout(function () {
+      setLoading(false);
+      showToast('Descarga simulada: ' + buildExportFileName('ReporteOlas'));
+    }, 1200);
+  }
+
+  function simulateExportDetail() {
+    setLoading(true, 'Exportando detalle...');
+    setTimeout(function () {
+      setLoading(false);
+      var safeId = (taskState.waveId || 'ola').replace(/[^\w-]/g, '').slice(0, 30);
+      showToast('Descarga simulada: ' + buildExportFileName('ReporteOlaDetalle', safeId));
+    }, 1200);
+  }
+
+  var floatTooltipEl = null;
+
+  function ensureFloatTooltip() {
+    if (!floatTooltipEl) {
+      floatTooltipEl = document.createElement('div');
+      floatTooltipEl.className = 'float-tooltip';
+      floatTooltipEl.setAttribute('role', 'tooltip');
+      floatTooltipEl.hidden = true;
+      document.body.appendChild(floatTooltipEl);
+    }
+    return floatTooltipEl;
+  }
+
+  function hideFloatTooltip() {
+    if (floatTooltipEl) floatTooltipEl.hidden = true;
+  }
+
+  function positionFloatTooltip(anchor, tip) {
+    var rect = anchor.getBoundingClientRect();
+    var gap = 8;
+    tip.style.top = (rect.bottom + gap) + 'px';
+    tip.style.left = rect.left + 'px';
+    requestAnimationFrame(function () {
+      if (tip.hidden) return;
+      var tipRect = tip.getBoundingClientRect();
+      var left = rect.left;
+      var top = rect.bottom + gap;
+      if (left + tipRect.width > window.innerWidth - 8) {
+        left = window.innerWidth - tipRect.width - 8;
+      }
+      if (left < 8) left = 8;
+      if (top + tipRect.height > window.innerHeight - 8) {
+        top = rect.top - tipRect.height - gap;
+      }
+      if (top < 8) top = 8;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
+    });
+  }
+
+  function showFloatTooltip(el) {
+    if (!el || el.disabled) return;
+    var text = el.getAttribute('data-tooltip');
+    if (!text) return;
+    var tip = ensureFloatTooltip();
+    tip.textContent = text;
+    tip.hidden = false;
+    positionFloatTooltip(el, tip);
+  }
+
+  function initFloatTooltips() {
+    ensureFloatTooltip();
+    document.addEventListener('mouseover', function (e) {
+      var el = e.target.closest('[data-tooltip]');
+      if (!el || el.disabled) return;
+      showFloatTooltip(el);
+    });
+    document.addEventListener('mouseout', function (e) {
+      var el = e.target.closest('[data-tooltip]');
+      if (!el) return;
+      var related = e.relatedTarget;
+      if (related && el.contains(related)) return;
+      hideFloatTooltip();
+    });
+    document.addEventListener('focusin', function (e) {
+      var el = e.target.closest('[data-tooltip]');
+      if (el && !el.disabled) showFloatTooltip(el);
+    });
+    document.addEventListener('focusout', function (e) {
+      var el = e.target.closest('[data-tooltip]');
+      if (el && (!e.relatedTarget || !el.contains(e.relatedTarget))) hideFloatTooltip();
+    });
+    window.addEventListener('scroll', hideFloatTooltip, true);
+    window.addEventListener('resize', hideFloatTooltip);
+  }
+
+  function init() {
+    initFloatTooltips();
+    listStatusMs = createMultiselect('listStatusMs', LIST_STATUS_OPTIONS, { selectAllLabel: SELECT_ALL_LABEL });
+    var taskOptions = {
+      tipos: ['Surtido de lista', 'Surtido de pallet'],
+      usuarios: ['EDWIN OBREGON', 'MARIA LOPEZ', 'Sin asignación'],
+      zonas: ['Zona de productos secos y refrigerados', 'Zona de abarrotes'],
+      stages: ['STAGE DE DESPACHO 39'],
+      estatus: ['Asignada', 'Cancelada', 'Disponible', 'En progreso', 'Realizado']
+    };
+    taskTipoMs = createMultiselect('taskTipoMs', taskOptions.tipos);
+    taskUsuarioMs = createMultiselect('taskUsuarioMs', taskOptions.usuarios);
+    taskZonaMs = createMultiselect('taskZonaMs', taskOptions.zonas);
+    taskStageMs = createMultiselect('taskStageMs', taskOptions.stages);
+    taskEstatusMs = createMultiselect('taskEstatusMs', taskOptions.estatus);
+
+    $('listStatusMs').addEventListener('change', updateListButtons);
+    ['taskTipoMs', 'taskUsuarioMs', 'taskZonaMs', 'taskStageMs', 'taskEstatusMs'].forEach(function (id) {
+      $(id).addEventListener('change', updateTaskSearchBtn);
+    });
+
+    if (typeof flatpickr !== 'undefined') {
+      datePicker = flatpickr($('listDateRange'), {
+        mode: 'range',
+        dateFormat: 'd/m/Y',
+        locale: flatpickr.l10ns.es,
+        maxDate: new Date(),
+        allowInput: false,
+        disableMobile: true,
+        onChange: updateListButtons,
+        onClose: updateListButtons
+      });
+    } else {
+      $('listDateRange').removeAttribute('readonly');
+    }
+
+    $('listWaveId').addEventListener('input', updateListButtons);
+    wirePagination('list', listState, renderListTable);
+    wirePagination('task', taskState, renderTaskTable);
+    initTableHeaders();
+
+    $('listSearchBtn').addEventListener('click', runListSearch);
+    $('listClearBtn').addEventListener('click', clearListFilters);
+    $('listExportBtn').addEventListener('click', simulateExportList);
+    $('listPageSize').addEventListener('change', function () {
+      listState.pageSize = +this.value;
+      listState.page = 1;
+      renderListTable();
+    });
+
+    $('detailBackBtn').addEventListener('click', showListView);
+    $('breadcrumbListLink').addEventListener('click', function (e) { e.preventDefault(); showListView(); });
+    $('breadcrumbListReportLink').addEventListener('click', function (e) { e.preventDefault(); showListView(); });
+    $('detailExportBtn').addEventListener('click', simulateExportDetail);
+    $('taskSearchBtn').addEventListener('click', runTaskSearch);
+    $('taskClearBtn').addEventListener('click', clearTaskFilters);
+    $('taskPageSize').addEventListener('change', function () {
+      taskState.pageSize = +this.value;
+      taskState.page = 1;
+      renderTaskTable();
+    });
+
+    updateListButtons();
+
+    buildMockWaveDates();
+
+    var params = new URLSearchParams(location.search);
+    if (params.get('view') === 'detail') {
+      showDetailView(params.get('ola') || MOCK.waves[0].id);
+    } else {
+      showListInitialState();
+    }
+  }
+
+  init();
+})();
+  </script>
+</body>
+</html>
